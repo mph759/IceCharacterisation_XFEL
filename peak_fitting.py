@@ -1,3 +1,9 @@
+'''
+Peak fitting for hexagonal and cubic ice diffraction peaks from XFEL experiments
+Written for use at PAL-XFEL experiment 2023-2nd-XSS-040
+Created on 2024-03-26 by Michael Hassett
+'''
+
 import matplotlib.pyplot as plt
 import numpy as np
 from astropy.modeling.fitting import LevMarLSQFitter
@@ -5,44 +11,59 @@ from astropy.modeling.models import Gaussian1D
 
 
 class CubicIceModel:
-    def __init__(self, amplitude, mean, stddev):
+    def __init__(self, amplitude: int, mean: int, stddev: float):
         self.fitter = LevMarLSQFitter()
-        self.fitted_model = None
-        self.model = self.__init_model__(amplitude, mean, stddev)
+        self.__fitted_model__ = None
+        self.__model__ = self.__init_model__(amplitude, mean, stddev)
 
-    def __init_model__(self, amplitude, mean, stddev):
+    def __init_model__(self, amplitude: int, mean: int, stddev: float):
         return Gaussian1D(amplitude=amplitude, mean=mean, stddev=stddev, name='cubic')
 
-    def fit(self, x_data, y_data):
-        self.fitted_model = self.fitter(self.model, x_data, y_data)
-        self.__get_models__()
+    def fit(self, x_data: list[int], y_data: list[float]):
+        self.__fitted_model__ = self.fitter(self.model, x_data, y_data)
 
-    def __get_models__(self):
+    @property
+    def fitted_model(self):
+        return self.__fitted_model__
+
+    @property
+    def model(self):
+        return self.__model__
+
+    @property
+    def peak1(self):
         return self.fitted_model
 
 
 class HexIceModel(CubicIceModel):
     def __init__(self,
-                 amplitudes: tuple[int, int, int],
-                 means: tuple[int, int, int],
-                 stddevs: tuple[int, int, int]):
-        super().__init__(amplitudes, means, stddevs)
+                 amplitude: tuple[int, int, int],
+                 mean: tuple[int, int, int],
+                 stddev: tuple[int, int, int]):
+        super().__init__(amplitude, mean, stddev)
 
     def __init_model__(self, amplitude: tuple[int, int, int],
                        mean: tuple[int, int, int],
-                       stddev: tuple[int, int, int]):
-        self.hex_1 = Gaussian1D(amplitude=amplitude[0], mean=mean[0], stddev=stddev[0],
+                       stddev: tuple[float, float, float]):
+        self.__hex_1__ = Gaussian1D(amplitude=amplitude[0], mean=mean[0], stddev=stddev[0],
                                 name='hex_1')
-        self.hex_2 = Gaussian1D(amplitude=amplitude[1], mean=mean[1], stddev=stddev[1],
+        self.__hex_2__ = Gaussian1D(amplitude=amplitude[1], mean=mean[1], stddev=stddev[1],
                                 name='hex_2')
-        self.hex_3 = Gaussian1D(amplitude=amplitude[2], mean=mean[2], stddev=stddev[2],
+        self.__hex_3__ = Gaussian1D(amplitude=amplitude[2], mean=mean[2], stddev=stddev[2],
                                 name='hex_3')
-        return self.hex_1 + self.hex_2 + self.hex_3
+        return self.__hex_1__ + self.__hex_2__ + self.__hex_3__
 
-    def __get_models__(self):
-        self.hex_1 = self.fitted_model['hex_1']
-        self.hex_2 = self.fitted_model['hex_2']
-        self.hex_3 = self.fitted_model['hex_3']
+    @property
+    def peak1(self):
+        return self.__fitted_model__['hex_1']
+
+    @property
+    def peak2(self):
+        return self.__fitted_model__['hex_2']
+
+    @property
+    def peak3(self):
+        return self.__fitted_model__['hex_3']
 
 
 def gaussian_fitting_testing():
@@ -54,14 +75,22 @@ def gaussian_fitting_testing():
     # data -= data.min()
     plt.plot(x, data)
 
-    HexIce = HexIceModel(amplitudes=[15, 8, 12], means=[15, 52, 79], stddevs=[4, 5, 6])
+    HexIce = HexIceModel(amplitude=[15, 8, 12], mean=[15, 52, 79], stddev=[4, 5, 6])
     HexIce.fit(x, data)
 
-    print(f'Mean: {HexIce.hex_1.mean.value}, Amplitude: {HexIce.hex_1.amplitude.value}, FWHM: {HexIce.hex_1.fwhm}')
-    print(f'Mean: {HexIce.hex_2.mean.value}, Amplitude: {HexIce.hex_2.amplitude.value}, FWHM: {HexIce.hex_2.fwhm}')
-    print(f'Mean: {HexIce.hex_3.mean.value}, Amplitude: {HexIce.hex_3.amplitude.value}, FWHM: {HexIce.hex_3.fwhm}')
+    print(f'Mean: {HexIce.peak1.mean.value}, Amplitude: {HexIce.peak1.amplitude.value}, FWHM: {HexIce.peak1.fwhm}')
+    print(f'Mean: {HexIce.peak2.mean.value}, Amplitude: {HexIce.peak2.amplitude.value}, FWHM: {HexIce.peak2.fwhm}')
+    print(f'Mean: {HexIce.peak3.mean.value}, Amplitude: {HexIce.peak3.amplitude.value}, FWHM: {HexIce.peak3.fwhm}')
 
     plt.plot(x, HexIce.fitted_model(x))
+
+    CubicIce = CubicIceModel(amplitude=15, mean=52, stddev=5)
+    CubicIce.fit(x, data)
+
+    print(f'Mean: {CubicIce.peak1.mean.value}, Amplitude: {CubicIce.peak1.amplitude.value}, FWHM: {CubicIce.peak1.fwhm}')
+
+    plt.plot(x, CubicIce.fitted_model(x))
+
     plt.show()
 
 
