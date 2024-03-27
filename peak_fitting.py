@@ -1,8 +1,8 @@
-'''
+"""
 Peak fitting for hexagonal and cubic ice diffraction peaks from XFEL experiments
 Written for use at PAL-XFEL experiment 2023-2nd-XSS-040
 Created on 2024-03-26 by Michael Hassett
-'''
+"""
 
 import matplotlib.pyplot as plt
 import numpy as np
