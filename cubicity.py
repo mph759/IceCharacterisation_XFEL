@@ -23,7 +23,7 @@ def cubicity(normalised_peak: float, *peaks):
     return cub_fraction / (cub_fraction + hex_fraction)
 
 
-if __name__ == '__main__':
+def cubicity_testing():
     peak1 = 17.491
     peak2 = 9.316
     peak3 = 10.188
@@ -33,3 +33,7 @@ if __name__ == '__main__':
     print(norm_peaks)
     cubicity_2um = cubicity(norm_peaks[1], *peaks_2um)
     print(cubicity_2um)
+
+
+if __name__ == '__main__':
+    cubicity_testing()

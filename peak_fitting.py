@@ -13,18 +13,13 @@ from astropy.modeling.models import Gaussian1D
 class CubicIceModel:
     def __init__(self, amplitude: int, mean: int, stddev: float):
         self.fitter = LevMarLSQFitter()
-        self.__fitted_model__ = None
         self.__model__ = self.__init_model__(amplitude, mean, stddev)
 
     def __init_model__(self, amplitude: int, mean: int, stddev: float):
         return Gaussian1D(amplitude=amplitude, mean=mean, stddev=stddev, name='cubic')
 
     def fit(self, x_data: list[int], y_data: list[float]):
-        self.__fitted_model__ = self.fitter(self.model, x_data, y_data)
-
-    @property
-    def fitted_model(self):
-        return self.__fitted_model__
+        self.__model__ = self.fitter(self.model, x_data, y_data)
 
     @property
     def model(self):
@@ -32,7 +27,7 @@ class CubicIceModel:
 
     @property
     def peak1(self):
-        return self.fitted_model
+        return self.__model__
 
 
 class HexIceModel(CubicIceModel):
@@ -55,15 +50,15 @@ class HexIceModel(CubicIceModel):
 
     @property
     def peak1(self):
-        return self.__fitted_model__['hex_1']
+        return self.__model__['hex_1']
 
     @property
     def peak2(self):
-        return self.__fitted_model__['hex_2']
+        return self.__model__['hex_2']
 
     @property
     def peak3(self):
-        return self.__fitted_model__['hex_3']
+        return self.__model__['hex_3']
 
 
 def gaussian_fitting_testing():
@@ -82,14 +77,14 @@ def gaussian_fitting_testing():
     print(f'Mean: {HexIce.peak2.mean.value}, Amplitude: {HexIce.peak2.amplitude.value}, FWHM: {HexIce.peak2.fwhm}')
     print(f'Mean: {HexIce.peak3.mean.value}, Amplitude: {HexIce.peak3.amplitude.value}, FWHM: {HexIce.peak3.fwhm}')
 
-    plt.plot(x, HexIce.fitted_model(x))
+    plt.plot(x, HexIce.model(x))
 
     CubicIce = CubicIceModel(amplitude=15, mean=52, stddev=5)
     CubicIce.fit(x, data)
 
     print(f'Mean: {CubicIce.peak1.mean.value}, Amplitude: {CubicIce.peak1.amplitude.value}, FWHM: {CubicIce.peak1.fwhm}')
 
-    plt.plot(x, CubicIce.fitted_model(x))
+    plt.plot(x, CubicIce.model(x))
 
     plt.show()
 

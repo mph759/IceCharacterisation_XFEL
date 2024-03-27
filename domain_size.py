@@ -17,9 +17,10 @@ def domain_size(twotheta: float, fwhm: float, wavelength: float, K: float=0.94) 
     """
     return (K * wavelength) / (fwhm * np.cos(np.deg2rad(twotheta)/2))
 
-
-if __name__ == '__main__':
+def domain_size_testing():
     K = 0.94
     wavelength = 0.082E-9
-    domain_size = domain_size(twotheta=26.02, fwhm=0.00244, wavelength=wavelength, K=K)
-    print(domain_size)
+    print(domain_size(twotheta=26.02, fwhm=0.00244, wavelength=wavelength, K=K))
+
+if __name__ == '__main__':
+    domain_size_testing()
