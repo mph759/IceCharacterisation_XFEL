@@ -64,8 +64,9 @@ class HexIceFitting(CubicIceFitting):
 def gaussian_fitting_testing():
     # Generate simulated diffraction data (not realistic) from Gaussian curves,
     # adding random steps away to simulation diffusion
-    m = Gaussian1D(amplitude=10, mean=20, stddev=5) + Gaussian1D(amplitude=10, mean=50, stddev=5) + Gaussian1D(
-        amplitude=10, mean=80, stddev=5)
+    m = (Gaussian1D(amplitude=10, mean=20, stddev=5) +
+         Gaussian1D(amplitude=10, mean=50, stddev=5) +
+         Gaussian1D(amplitude=10, mean=80, stddev=5))
     x = np.linspace(0, 100, 2000)
     data = m(x)
     data = data + np.sqrt(data) * (np.random.random(x.size) - 0.5)
