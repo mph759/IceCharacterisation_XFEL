@@ -6,7 +6,7 @@ Created on 2024-03-26 by Michael Hassett
 
 import numpy as np
 import matplotlib.pyplot as plt
-from ice_q_predict import IcePeakPrediction
+from ice_peak_predict import IcePeakPrediction
 from peak_fitting import CubicIceFitting, HexIceFitting
 from cubicity_char import normalise_peaks, cubicity
 from domain_size_char import domain_size
