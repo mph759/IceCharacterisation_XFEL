@@ -82,6 +82,7 @@ def gaussian_fitting_testing():
     print(f'Mean: {hex_ice.peak1.mean.value}, Amplitude: {hex_ice.peak1.amplitude.value}, FWHM: {hex_ice.peak1.fwhm}')
     print(f'Mean: {hex_ice.peak2.mean.value}, Amplitude: {hex_ice.peak2.amplitude.value}, FWHM: {hex_ice.peak2.fwhm}')
     print(f'Mean: {hex_ice.peak3.mean.value}, Amplitude: {hex_ice.peak3.amplitude.value}, FWHM: {hex_ice.peak3.fwhm}')
+    print('\n')
     plt.plot(x, hex_ice.model(x))
 
     cubic_ice = CubicIceFitting(amplitude=15, mean=52, stddev=5)

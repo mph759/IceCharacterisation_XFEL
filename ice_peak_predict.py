@@ -14,7 +14,7 @@ def peak_predict_q(d_spacings: np.ndarray[float]):
     :return: peak_locs: peak positions in q
     """
     # peak_locs = sorted(np.round(np.divide(num_pixels, d_spacings)))
-    peak_locs = 2 * np.pi / d_spacings
+    peak_locs = np.sort(2 * np.pi / d_spacings)
     return peak_locs
 
 
@@ -26,7 +26,7 @@ def peak_predict_2theta(wavelength: float, d_spacings: np.ndarray[float]):
     :return: peak_locs: peak positions in 2theta
     """
     peak_locs = np.arcsin(wavelength / d_spacings)
-    peak_locs = np.arange(peak_locs, 2*peak_locs, 1)
+    peak_locs = np.sort(np.arange(peak_locs, 2*peak_locs, 1))
     return peak_locs
 
 
@@ -39,10 +39,10 @@ class IcePeakPrediction:
         """
         self.__wavelength__ = wavelength
         self.x_param = x_param
-        self.__hex_d_spacing__ = np.array([0, 0])
-        self.__cubic_d_spacing__ = np.array([0])
-        self.__hex_peaks__ = self.hex_ice_peaks()
-        self.__cubic_peak__ = self.cubic_ice_peak()
+        self.__hex_d_spacing__ = np.array([0.78228388, 0.73535726, 0.903615185])
+        self.__cubic_d_spacing__ = np.array([0.63818213])
+        self.hex_ice_peaks()
+        self.cubic_ice_peak()
 
     @property
     def wavelength(self) -> float:
@@ -108,8 +108,8 @@ class IcePeakPrediction:
 def ice_peak_prediction_testing():
     wavelength = 0.84e-9  # metres
     ice = IcePeakPrediction(wavelength=wavelength)
-    ice.hex_ice_peaks
-    ice.cubic_ice_peak
+    print(ice.hex_peaks)
+    print(ice.cubic_peak)
 
 if __name__ == '__main__':
     ice_peak_prediction_testing()
