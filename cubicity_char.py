@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 #testing
 from peak_fitting import real_data_fitting_testing
 
-def normalise_peaks(peaks: list[float]) -> list[float]:
+def normalise_peaks(peaks: list):
     """
     Normalise the peaks of known hexagonal ice diffraction
     :param peaks: Hexagonal ice diffraction peaks
@@ -21,7 +21,7 @@ def normalise_peaks(peaks: list[float]) -> list[float]:
     return [peak/normal_peak for peak in peaks]
 
 
-def cubic_fraction(normalised_peak: float, peaks: list[float]):
+def cubic_fraction(normalised_peak: float, peaks: list):
     """
     Calculate the cubic fraction from the normalised hexagonal ice peaks
     :param normalised_peak: Second hexagonal ice diffraction peak
@@ -31,7 +31,7 @@ def cubic_fraction(normalised_peak: float, peaks: list[float]):
     return peaks[1] - normalised_peak * peaks[0]
 
 
-def cubicity(normalised_peak: float, peaks: list[float]) -> float:
+def cubicity(normalised_peak: float, peaks: list) -> float:
     """
     Cubicity characterisation of ice crystal from X-ray diffraction peaks
     :param normalised_peak: Normalised second hexagonal peak value (the peak shared with cubic)

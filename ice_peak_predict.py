@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def peak_predict_q(d_spacings: np.ndarray[float]):
+def peak_predict_q(d_spacings: np.ndarray):
     """
     Predict the peak q vector values of a crystal with specified d spacing(s)
     :param d_spacings: Lattice spacings of crystal in metres
@@ -18,7 +18,7 @@ def peak_predict_q(d_spacings: np.ndarray[float]):
     return peak_locs
 
 
-def peak_predict_2theta(wavelength: float, d_spacings: np.ndarray[float]):
+def peak_predict_2theta(wavelength: float, d_spacings: np.ndarray):
     """
     Predict the peak 2theta values of a crystal with specified d spacing(s), and experimental wavelength
     :param wavelength: Experimental diffraction wavelength in metres
@@ -62,29 +62,29 @@ class IcePeakPrediction:
             self.__x_param__ = '2theta'
 
     @property
-    def hex_peaks(self) -> list[float, float, float]:
+    def hex_peaks(self) -> list:
         return self.__hex_peaks__
 
     @property
-    def cubic_peak(self) -> list[float]:
+    def cubic_peak(self) -> list:
         return self.__cubic_peak__
 
     @property
-    def hex_d_spacing(self) -> list[float]:
+    def hex_d_spacing(self) -> list:
         return self.__hex_d_spacing__
 
     @property
-    def cubic_d_spacing(self) -> list[float]:
+    def cubic_d_spacing(self) -> list:
         return self.__cubic_d_spacing__
 
     @property
     def peaks(self) -> dict:
         return {'hex': self.hex_peaks, 'cubic': self.cubic_peak}
 
-    def hex_ice_peaks(self) -> list[float, float, float]:
+    def hex_ice_peaks(self) -> list:
         self.__hex_peaks__ = self.__determine_peak_locs__(self.hex_d_spacing)
 
-    def cubic_ice_peak(self) -> list[float]:
+    def cubic_ice_peak(self) -> list:
         self.__cubic_peak__ = self.__determine_peak_locs__(self.cubic_d_spacing)
 
     def __determine_peak_locs__(self, d_spacing):

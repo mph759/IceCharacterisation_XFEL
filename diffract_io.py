@@ -6,7 +6,6 @@ Created on 2024-03-29 by Michael Hassett (Edited from original code by Sebastian
 import numpy as np
 import h5py
 from pathlib import Path
-import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib import colors
 

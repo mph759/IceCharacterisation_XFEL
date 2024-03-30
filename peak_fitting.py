@@ -20,7 +20,7 @@ class CubicIceFitting:
     def __init_model__(self, amplitude: int, mean: int, stddev: float):
         return Gaussian1D(amplitude=amplitude, mean=mean, stddev=stddev, name='cubic')
 
-    def fit(self, x_data: list[int], y_data: list[float]):
+    def fit(self, x_data: list, y_data: list):
         self.__model__ = self.fitter(self.model, x_data, y_data)
 
     @property
@@ -34,14 +34,14 @@ class CubicIceFitting:
 
 class HexIceFitting(CubicIceFitting):
     def __init__(self,
-                 amplitude: tuple[int, int, int],
-                 mean: tuple[int, int, int],
-                 stddev: tuple[int, int, int]):
+                 amplitude: tuple,
+                 mean: tuple,
+                 stddev: tuple):
         super().__init__(amplitude, mean, stddev)
 
-    def __init_model__(self, amplitude: tuple[int, int, int],
-                       mean: tuple[int, int, int],
-                       stddev: tuple[float, float, float]):
+    def __init_model__(self, amplitude: tuple,
+                       mean: tuple,
+                       stddev: tuple):
         self.__hex_1__ = Gaussian1D(amplitude=amplitude[0], mean=mean[0], stddev=stddev[0],
                                     name='hex_1')
         self.__hex_2__ = Gaussian1D(amplitude=amplitude[1], mean=mean[1], stddev=stddev[1],
