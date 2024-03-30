@@ -8,6 +8,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from astropy.modeling.fitting import LevMarLSQFitter
 from astropy.modeling.models import Gaussian1D
+from diffract_io import diffraction_h5
+from pathlib import Path
 
 
 class CubicIceFitting:
@@ -98,5 +100,33 @@ def gaussian_fitting_testing():
     plt.show()
 
 
+def real_data_fitting_testing(data_path, data_name, amplitude, mean, stddev):
+    q_select = [1.5, 2]
+    diff_pattern = diffraction_h5(data_path, q_select)
+    fig, ax = diff_pattern.plot_rad_intensity()
+
+    hex_ice = HexIceFitting(amplitude=amplitude, mean=mean, stddev=stddev)
+    hex_ice.fit(diff_pattern.q[(diff_pattern.q_selection[0] < diff_pattern.q) & (diff_pattern.q < diff_pattern.q_selection[1])],
+                diff_pattern.rad_intensity[(diff_pattern.q_selection[0] < diff_pattern.q) & (diff_pattern.q < diff_pattern.q_selection[1])])
+    print(data_name)
+    print(f'Mean: {hex_ice.peak1.mean.value}, Amplitude: {hex_ice.peak1.amplitude.value}, FWHM: {hex_ice.peak1.fwhm}')
+    print(f'Mean: {hex_ice.peak2.mean.value}, Amplitude: {hex_ice.peak2.amplitude.value}, FWHM: {hex_ice.peak2.fwhm}')
+    print(f'Mean: {hex_ice.peak3.mean.value}, Amplitude: {hex_ice.peak3.amplitude.value}, FWHM: {hex_ice.peak3.fwhm}')
+    print('\n')
+    ax.plot(diff_pattern.q[(diff_pattern.q_selection[0] < diff_pattern.q)
+                           & (diff_pattern.q < diff_pattern.q_selection[1])],
+            hex_ice.model(diff_pattern.q)[(diff_pattern.q_selection[0] < diff_pattern.q)
+                                          & (diff_pattern.q < diff_pattern.q_selection[1])])
+    ax.set_title(data_name)
+    return hex_ice
+
+
 if __name__ == '__main__':
-    gaussian_fitting_testing()
+    # gaussian_fitting_testing()
+
+    test_path = Path().cwd() / 'test' / '1h.h5'
+    test_name = 'hexagonal ice'
+    real_data_fitting_testing(test_path, test_name,
+                              amplitude=[6.5e-5, 1.3e-4, 2.9e-5],
+                              mean=[1.6, 1.7, 1.8],
+                              stddev=[0.01, 0.01, 0.01])

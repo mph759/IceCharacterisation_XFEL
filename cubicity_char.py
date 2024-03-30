@@ -6,7 +6,10 @@ Created on 2024-03-26 by Michael Hassett
 from typing import List, Any
 
 import numpy as np
-
+from pathlib import Path
+import matplotlib.pyplot as plt
+#testing
+from peak_fitting import real_data_fitting_testing
 
 def normalise_peaks(peaks: list[float]) -> list[float]:
     """
@@ -60,5 +63,35 @@ def cubicity_testing():
     print(f'50 micron thick ice: {cubicity_50um}')
 
 
+def cubicity_real_data_test():
+    test_path = Path().cwd() / 'test'
+    hex_ice_file = '1h.h5'
+
+    data_path = test_path / hex_ice_file
+    hex_ice_model = real_data_fitting_testing(data_path, 'hexagonal ice',
+                                              amplitude=[6.5e-5, 1.3e-4, 2.9e-5],
+                                              mean=[1.6, 1.7, 1.8],
+                                              stddev=[0.01, 0.01, 0.01])
+    hex_ice_model_peaks = [hex_ice_model.peak1.amplitude.value,
+                           hex_ice_model.peak2.amplitude.value,
+                           hex_ice_model.peak3.amplitude.value]
+    hex_ice_model_norm_peaks = normalise_peaks(hex_ice_model_peaks)
+
+    mixed_ice_file = 'hc.h5'
+    data_path = test_path / mixed_ice_file
+    mixed_ice_model = real_data_fitting_testing(data_path, 'hexagonal + cubic ice',
+                                                amplitude=[6.3e-5, 1.3e-4, 2.61e-5],
+                                                mean=[1.6, 1.7, 1.8],
+                                                stddev=[0.01, 0.01, 0.005])
+    print(mixed_ice_model.fitter.fit_info['message'])
+    mixed_ice_model_peaks = [mixed_ice_model.peak1.amplitude.value,
+                             mixed_ice_model.peak2.amplitude.value,
+                             mixed_ice_model.peak3.amplitude.value]
+    mixed_ice_cubicity = cubicity(hex_ice_model_norm_peaks[1], mixed_ice_model_peaks)
+    print(f'Cubicity: {mixed_ice_cubicity}')
+    plt.show()
+
+
 if __name__ == '__main__':
-    cubicity_testing()
+    # cubicity_testing()
+    cubicity_real_data_test()
