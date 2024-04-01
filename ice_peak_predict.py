@@ -6,6 +6,8 @@ Created on 2024-03-26 by Michael Hassett
 import matplotlib.pyplot as plt
 import numpy as np
 
+import paltools
+
 
 def peak_predict_q(d_spacings: np.ndarray):
     """
@@ -25,8 +27,9 @@ def peak_predict_2theta(wavelength: float, d_spacings: np.ndarray):
     :param d_spacings: Lattice spacings of crystal in metres
     :return: peak_locs: peak positions in 2theta
     """
-    peak_locs = np.arcsin(wavelength / d_spacings)
-    peak_locs = np.sort(np.arange(peak_locs, 2*peak_locs, 1))
+    remainder, ratio = np.divmod(wavelength/d_spacings, np.pi)
+    peak_locs = np.arcsin(remainder)
+    peak_locs = peak_locs * ratio
     return peak_locs
 
 
@@ -39,8 +42,8 @@ class IcePeakPrediction:
         """
         self.__wavelength__ = wavelength
         self.x_param = x_param
-        self.__hex_d_spacing__ = np.array([0.78228388, 0.73535726, 0.903615185])
-        self.__cubic_d_spacing__ = np.array([0.63818213])
+        self.__hex_d_spacing__ = np.array([0.78228388e-9, 0.73535726e-9, 0.903615185e-9])
+        self.__cubic_d_spacing__ = np.array([0.63818213e-9])
         self.hex_ice_peaks()
         self.cubic_ice_peak()
 
@@ -105,11 +108,16 @@ class IcePeakPrediction:
         ax.plot(self.hex_peaks, 0)
         ax.plot(self.cubic_peak, 0)
 
+
 def ice_peak_prediction_testing():
-    wavelength = 0.84e-9  # metres
-    ice = IcePeakPrediction(wavelength=wavelength)
+    # wavelength = 0.84e-9  # metres
+    energy = 15e3
+    wavelength = paltools.energy2wavelength(energy)
+    print(wavelength)
+    ice = IcePeakPrediction(wavelength=wavelength, x_param='2theta')
     print(ice.hex_peaks)
     print(ice.cubic_peak)
+
 
 if __name__ == '__main__':
     ice_peak_prediction_testing()

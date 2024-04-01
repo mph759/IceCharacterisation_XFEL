@@ -9,7 +9,7 @@ import numpy as np
 from pathlib import Path
 import matplotlib.pyplot as plt
 #testing
-from peak_fitting import real_data_fitting_testing
+from peak_fitting import sim_data_fitting_testing
 
 def normalise_peaks(peaks: list):
     """
@@ -68,10 +68,10 @@ def cubicity_real_data_test():
     hex_ice_file = '1h.h5'
 
     data_path = test_path / hex_ice_file
-    hex_ice_model = real_data_fitting_testing(data_path, 'hexagonal ice',
-                                              amplitude=[6.5e-5, 1.3e-4, 2.9e-5],
-                                              mean=[1.6, 1.7, 1.8],
-                                              stddev=[0.01, 0.01, 0.01])
+    hex_ice_model = sim_data_fitting_testing(data_path, 'hexagonal ice',
+                                             amplitude=[6.5e-5, 1.3e-4, 2.9e-5],
+                                             mean=[1.6, 1.7, 1.8],
+                                             stddev=[0.01, 0.01, 0.01])
     hex_ice_model_peaks = [hex_ice_model.peak1.amplitude.value,
                            hex_ice_model.peak2.amplitude.value,
                            hex_ice_model.peak3.amplitude.value]
@@ -79,10 +79,10 @@ def cubicity_real_data_test():
 
     mixed_ice_file = 'hc.h5'
     data_path = test_path / mixed_ice_file
-    mixed_ice_model = real_data_fitting_testing(data_path, 'hexagonal + cubic ice',
-                                                amplitude=[6.3e-5, 1.3e-4, 2.61e-5],
-                                                mean=[1.6, 1.7, 1.8],
-                                                stddev=[0.01, 0.01, 0.005])
+    mixed_ice_model = sim_data_fitting_testing(data_path, 'hexagonal + cubic ice',
+                                               amplitude=[6.3e-5, 1.3e-4, 2.61e-5],
+                                               mean=[1.6, 1.7, 1.8],
+                                               stddev=[0.01, 0.01, 0.005])
     print(mixed_ice_model.fitter.fit_info['message'])
     mixed_ice_model_peaks = [mixed_ice_model.peak1.amplitude.value,
                              mixed_ice_model.peak2.amplitude.value,

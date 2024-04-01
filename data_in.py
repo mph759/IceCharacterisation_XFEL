@@ -2,7 +2,7 @@
 """
 Created on Sat Mar 30 16:48:39 2024
 
-@author: S3599678
+@author: S3599678 Stefan Paporakis
 """
 
 import time

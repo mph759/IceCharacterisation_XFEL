@@ -28,22 +28,20 @@ class NewFileHandler(FileSystemEventHandler):
             # Process each new file in a separate thread
             thread = threading.Thread(target=self.process_new_file, args=(event.src_path,))
             thread.start()
+
     def process_new_file(self, file_path):
          time.sleep(1)
-         try:
-             wavelength = energy2wavelength(15)
-             amplitude = [6.5e-5, 1.3e-4, 2.9e-5]
-             mean = [1.6, 1.7, 1.8]
-             stddev = [0.01, 0.01, 0.01]
-             current_array = np.array(Image.open(file_path))
-             r, image = radial_average(current_array, 20)
-             np.save(out_path, (r,image))
-             print("done")
-             #plt.plot(r, image)
-             #plt.savefig(plot_path + "_plot.png")  
-             #plt.close()  
-         except Exception as e:
-             print(f"Error processing file {file_path}: {e}")
+         wavelength = energy2wavelength(15e3)
+         amplitude = [6.5e-5, 1.3e-4, 2.9e-5]
+         mean = [1.6, 1.7, 1.8]
+         stddev = [0.01, 0.01, 0.01]
+         current_array = np.array(Image.open(file_path))
+         r, image = radial_average(current_array, 20)
+         np.save(out_path, (r,image))
+         print("done")
+         #plt.plot(r, image)
+         #plt.savefig(plot_path + "_plot.png")
+         #plt.close()
 
 
 def watch_folder(data_folder, interval, max_intervals_without_files):
@@ -69,6 +67,7 @@ def watch_folder(data_folder, interval, max_intervals_without_files):
         observer.stop()
         observer.join()
         print("No new files recorded for a while, script stopped.")
+
 path_to_watch = "C://Users//s3599678//OneDrive - RMIT University//PhD//misc//Seoul//scripts//IceCharacterisation_XFEL-master//test//powder//"
 out_path = path_to_watch+'//plots//'
 watch_folder(path_to_watch, 1, 2)  
