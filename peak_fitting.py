@@ -14,8 +14,12 @@ from diffract_io import diffraction_h5
 
 
 class CubicIceFitting:
-    def __init__(self, amplitude: int, mean: int, stddev: float, name: str = None):
-        self.fitter = LevMarLSQFitter()
+    def __init__(self, amplitude: int,
+                 mean: int,
+                 stddev: float,
+                 name: str = None,
+                 *args, **kwargs):
+        self.fitter = LevMarLSQFitter(*args, **kwargs)
         if name is None:
             self.__model__ = self.__init_model__(amplitude, mean, stddev)
         else:
@@ -61,8 +65,9 @@ class HexIceFitting(CubicIceFitting):
                  amplitude: tuple,
                  mean: tuple,
                  stddev: tuple,
-                 name: str = None):
-        super().__init__(amplitude, mean, stddev, name)
+                 name: str = None,
+                 *args, **kwargs):
+        super().__init__(amplitude, mean, stddev, name, *args, **kwargs)
 
     def __init_model__(self, amplitude: tuple,
                        mean: tuple,
