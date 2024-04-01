@@ -18,7 +18,7 @@ class Experiment:
         self.__photon_energy__ = photon_energy
         self.__wavelength__ = energy2wavelength(self.photon_energy)
         self.__detector_distance__ = detector_distance
-        if Path.exists(root_path):
+        if Path(root_path).exists():
             self.__root_path__ = Path(root_path)
         else:
             raise FileNotFoundError('Root path does not exist')
