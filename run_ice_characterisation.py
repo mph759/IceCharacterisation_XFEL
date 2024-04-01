@@ -6,6 +6,7 @@ Created on 2024-03-30 by Michael Hassett
 import numpy as np
 from pathlib import Path
 import matplotlib.pyplot as plt
+from matplotlib import colors
 from PIL import Image
 
 from peak_fitting import CubicIceFitting, HexIceFitting
@@ -20,7 +21,7 @@ if __name__ == '__main__':
     experiment_id = 'old'
     detector_dist = 0.226   # metres
     photon_energy = 15e3    # eV
-    test = False
+    test = True
     if test:
         root_path = Path.cwd()
         tiff_path = root_path / Path(
@@ -40,20 +41,22 @@ if __name__ == '__main__':
     '''
 
     tiff_array = np.array(Image.open(tiff_path))
-    plt.imshow(tiff_array)
+    tiff_array[tiff_array == -1000.0] = np.NaN
+    plt.imshow(tiff_array,norm=colors.LogNorm(),origin='lower')
+    plt.plot(1064,1064,'x')
     savefig_name = tiff_path.parent / f'{tiff_path.stem}_tiff.png'
     plt.savefig(savefig_name)
-    r, radial_average = paltools.radial_average(tiff_array, 1)
+    r, intensity = paltools.radial_average(tiff_array, 1)
     plt.figure()
-    plt.plot(r, radial_average)
+    plt.plot(r, intensity)
     savefig_name = tiff_path.parent / f'{tiff_path.stem}_r.png'
     plt.savefig(savefig_name)
     ttheta = paltools.bins2twotheta(r, detector_dist)
     q_vector = paltools.twothetaq(ttheta, current_exp.wavelength) / 1e9
-    # q_selection = (q_vector > 4)
-    # plt.plot(q_vector[q_selection], abs(intensity[q_selection]))
-
-    # plt.plot(q_vector, radial_average)
+    #q_selection = (q_vector > 4.12)
+    plt.figure()
+    plt.plot(q_vector, abs(intensity))
+    #plt.plot(q_vector[q_selection], abs(intensity[q_selection]))
 
     plt.xlabel("q \ nm$^{-1}$")
     plt.ylabel("Intensity")
