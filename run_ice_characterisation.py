@@ -18,20 +18,21 @@ import paltools
 
 if __name__ == '__main__':
     # experiment_id = '2023-2nd-XSS-040'
-    experiment_id = 'old'
-    detector_dist = 0.226   # metres
+    experiment_id = '2021-XSS'
+    detector_dist = 0.321   # metres
     photon_energy = 15e3    # eV
-    test = True
+    pixel_size = None
+    test = False
     if test:
         root_path = Path.cwd()
-        tiff_path = root_path / Path(
-            'scratch-20240331T002819Z-001/scratch/day3_run2_Ice_50_00013_singles_1.tiff')
+        tiff_path = root_path / Path('scratch-20240331T002819Z-001/scratch/day3_run2_Ice_50_00013_singles_1.tiff')
     else:
         root_path = r'/pal/home/gspark_snu/analysis/sebastian/data/PAL_2021_data/'
         tiff_path = root_path / Path('scratch/day3_run13_Ice_2_00002_avr.tiff')
     current_exp = paltools.Experiment(experiment_id=experiment_id,
                                       photon_energy=photon_energy,
                                       detector_distance=detector_dist,
+                                      pixel_size=pixel_size,
                                       root_path=root_path)
     '''
     run_id = "day3_run12_Ice_2"
@@ -51,8 +52,8 @@ if __name__ == '__main__':
     plt.plot(r, intensity)
     savefig_name = tiff_path.parent / f'{tiff_path.stem}_r.png'
     plt.savefig(savefig_name)
-    ttheta = paltools.bins2twotheta(r, detector_dist)
-    q_vector = paltools.twothetaq(ttheta, current_exp.wavelength) / 1e9
+    ttheta = current_exp.bins2twotheta(r)
+    q_vector = current_exp.twotheta2q(ttheta) / 1e9
     #q_selection = (q_vector > 4.12)
     plt.figure()
     plt.plot(q_vector, abs(intensity))

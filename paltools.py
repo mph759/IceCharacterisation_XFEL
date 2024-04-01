@@ -15,11 +15,13 @@ class Experiment:
     def __init__(self, experiment_id: str,
                  photon_energy: float,
                  detector_distance: float,
+                 pixel_size: float,
                  root_path: str):
         self.__id__ = experiment_id
         self.__photon_energy__ = photon_energy
         self.__wavelength__ = energy2wavelength(self.photon_energy)
         self.__detector_distance__ = detector_distance
+        self.__pixel_size__ = pixel_size
         if Path(root_path).exists():
             self.__root_path__ = Path(root_path)
         else:
@@ -42,8 +44,20 @@ class Experiment:
         return self.__detector_distance__
 
     @property
+    def pixel_size(self): return self.__pixel_size__
+
+    @property
     def path(self):
         return self.__root_path__
+
+    def twotheta2q(self, twoTheta):
+        return (1 / self.wavelength) * np.sin(np.deg2rad(twoTheta / 2))
+
+    def q2twotheta(self, q):
+        return 2 * np.arcsin(q * self.wavelength)
+
+    def bins2twotheta(self, radial_bins):
+        return 4 * np.arctan(radial_bins * self.pixel_size / 2 * self.detector_distance)
 
 
 class run:
@@ -283,12 +297,7 @@ def loadmask(filename):
     return mask
 
 
-def twothetaq(twoTheta, wavelength):
-    return (1 / wavelength) * np.sin(np.deg2rad(twoTheta / 2))
 
-
-def qtwotheta(q, wavelength):
-    return 2 * np.arcsin(q * wavelength)
 
 
 def energy2wavelength(photon_energy):
@@ -297,5 +306,4 @@ def energy2wavelength(photon_energy):
     return c * h / photon_energy
 
 
-def bins2twotheta(radial_bins, detector_distance):
-    return 4 * np.arctan(radial_bins / 2 * detector_distance)
+
