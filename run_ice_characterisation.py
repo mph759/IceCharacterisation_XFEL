@@ -40,16 +40,20 @@ if __name__ == '__main__':
     '''
 
     tiff_array = np.array(Image.open(tiff_path))
-    # plt.imshow(tiff_array)
+    plt.imshow(tiff_array)
+    savefig_name = tiff_path.parent / f'{tiff_path.stem}_tiff.png'
+    plt.savefig(savefig_name)
     r, radial_average = paltools.radial_average(tiff_array, 1)
     plt.figure()
-    # plt.plot(r, radial_average)
+    plt.plot(r, radial_average)
+    savefig_name = tiff_path.parent / f'{tiff_path.stem}_r.png'
+    plt.savefig(savefig_name)
     ttheta = paltools.bins2twotheta(r, detector_dist)
     q_vector = paltools.twothetaq(ttheta, current_exp.wavelength) / 1e9
     # q_selection = (q_vector > 4)
     # plt.plot(q_vector[q_selection], abs(intensity[q_selection]))
 
-    plt.plot(q_vector, radial_average)
+    # plt.plot(q_vector, radial_average)
 
     plt.xlabel("q \ nm$^{-1}$")
     plt.ylabel("Intensity")

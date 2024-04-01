@@ -256,7 +256,6 @@ def partition_signal(y, noise_start, noise_end, signal_start, signal_end):
     signal = y[int(L * signal_start):int(L * signal_end)]
     return signal, noise
 
-
 def snr_3(y):
     snr_signal = np.var(y) / np.mean(y)
     return snr_signal
