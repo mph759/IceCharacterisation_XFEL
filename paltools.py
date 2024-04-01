@@ -10,12 +10,33 @@ from matplotlib import pyplot as plt
 
 
 class Experiment:
-    def __init__(self, experiment_id, photon_energy, detector_distance, root_path):
-        self.id = experiment_id
-        self.photon_energy = photon_energy
-        self.wavelength = energy2wavelength(self.photon_energy)
-        self.detector_distance = detector_distance
-        self.path = Path(root_path)
+    def __init__(self, experiment_id: str,
+                 photon_energy: float,
+                 detector_distance: float,
+                 root_path: str):
+        self.__id__ = experiment_id
+        self.__photon_energy__ = photon_energy
+        self.__wavelength__ = energy2wavelength(self.photon_energy)
+        self.__detector_distance__ = detector_distance
+        if Path.exists(root_path):
+            self.__root_path__ = Path(root_path)
+        else:
+            raise FileNotFoundError('Root path does not exist')
+
+    @property
+    def id(self): return self.__id__
+
+    @property
+    def photon_energy(self): return self.__photon_energy__
+
+    @property
+    def wavelength(self): return self.__wavelength__
+
+    @property
+    def detector_distance(self): return self.__detector_distance__
+
+    @property
+    def path(self): return self.__root_path__
 
 
 class run:
@@ -34,10 +55,11 @@ class run:
         #     return np.squeeze(pulseIds)
 
         if self.experiment.id == '2023-2nd-XSS-040':
-            filename = self.pulseinfo_filename / "001_001_%03d.h5"%scanId
+            file_name = str("00000001_%08d.h5" % (scanId * 300))
         else:
-            filename = self.pulseinfo_filename / str("00000001_%08d.h5" % (scanId * 300))
-        with h5py.File(filename) as f:
+            file_name = str("001_001_%03d.h5"%scanId)
+        file = self.pulseinfo_filename / file_name
+        with h5py.File(file) as f:
             pulseIds = np.array(list(f.keys()))
         return pulseIds
 
@@ -47,9 +69,9 @@ class run:
             return np.squeeze(intensity_norm)
 
         if self.experiment.id == '2023-2nd-XSS-040':
-            filename = self.total_sum / "001_001_%03d.h5"%scanId
-        else:
             filename = self.total_sum_filename / str("00000001_%08d.h5" % (scanId * 300))
+        else:
+            filename = self.total_sum / str("001_001_%03d.h5" % scanId)
         with h5py.File(filename) as f:
             return f[pulseId][()]
 
@@ -69,9 +91,9 @@ class run:
             return np.squeeze(yvar)
 
         if self.experiment.id == '2023-2nd-XSS-040':
-            scan_name = "001_001_%03d.h5"%scanId
-        else:
             scan_name = "00000001_%08d.h5" % (scanId * 300)
+        else:
+            scan_name = "001_001_%03d.h5"%scanId
         intensity_filename = self.intensity_filename / scan_name
         yvar = run.__getRadial(intensity_filename, pulseId)
         return yvar
@@ -87,10 +109,10 @@ class run:
             return np.squeeze(yvar)
 
         if self.experiment.id == '2023-2nd-XSS-040':
-            scan_name = "001_001_%03d.h5"%scanId
-        else:
             scan_name = "00000001_%08d.h5" % (scanId * 300)
-        twotheta_filename = self.twotheta_filename + scan_name
+        else:
+            scan_name = "001_001_%03d.h5" % scanId
+        twotheta_filename = self.twotheta_filename / scan_name
         xvar = run.__getRadial(twotheta_filename, pulseId)
         return xvar
 
