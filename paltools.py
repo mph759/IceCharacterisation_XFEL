@@ -46,7 +46,7 @@ class run:
             intensity_norm = np.array([self.getIntensityNorm(scanId, id) for id in pulseId])
             return np.squeeze(intensity_norm)
 
-        if self.experiment == '2023-2nd-XSS-040':
+        if self.experiment.id == '2023-2nd-XSS-040':
             filename = self.total_sum / "001_001_%03d.h5"%scanId
         else:
             filename = self.total_sum_filename / str("00000001_%08d.h5" % (scanId * 300))
@@ -68,7 +68,7 @@ class run:
             yvar = np.array([self.getRadialIntensity(scanId, id) for id in pulseId])
             return np.squeeze(yvar)
 
-        if self.experiment == '2023-2nd-XSS-040':
+        if self.experiment.id == '2023-2nd-XSS-040':
             scan_name = "001_001_%03d.h5"%scanId
         else:
             scan_name = "00000001_%08d.h5" % (scanId * 300)
@@ -86,7 +86,7 @@ class run:
             yvar = np.array([self.getRadialtwoTheta(scanId, id) for id in pulseId])
             return np.squeeze(yvar)
 
-        if self.experiment == '2023-2nd-XSS-040':
+        if self.experiment.id == '2023-2nd-XSS-040':
             scan_name = "001_001_%03d.h5"%scanId
         else:
             scan_name = "00000001_%08d.h5" % (scanId * 300)
