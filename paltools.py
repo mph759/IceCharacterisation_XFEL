@@ -57,7 +57,7 @@ class Experiment:
         return 2 * np.arcsin(q * self.wavelength)
 
     def bins2twotheta(self, radial_bins):
-        return 4 * np.arctan(radial_bins * self.pixel_size / 2 * self.detector_distance)
+        return 4 * np.arctan((radial_bins * self.pixel_size) / (2 * self.detector_distance))
 
 
 class run:
