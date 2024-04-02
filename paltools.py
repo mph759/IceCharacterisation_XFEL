@@ -25,7 +25,7 @@ class Experiment:
         if Path(root_path).exists():
             self.__root_path__ = Path(root_path)
         else:
-            raise FileNotFoundError('Root path does not exist')
+            raise FileNotFoundError(f'Root path {root_path} does not exist')
 
     @property
     def id(self):

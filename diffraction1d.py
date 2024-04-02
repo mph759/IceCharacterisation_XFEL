@@ -7,6 +7,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import pyFAI
+from pyFAI.detectors import Detector
+from pyFAI.azimuthalIntegrator import AzimuthalIntegrator
+from pyFAI.geometry import Geometry
+import os
+os.environ['PYOPENCL_COMPILER_OUTPUT'] = '1'
 
 
 def radial_integration(frame: np.ndarray):
@@ -22,27 +27,27 @@ def radial_integration(frame: np.ndarray):
 
     x_centre, y_centre = [1458.937, 1427.764]
     if 'rayonix_lx255-hs' == setting['detector']:
-        detector = pyFAI.detectors.Detector(pixel1=0.255 / 5760, pixel2=0.255 / 5760, max_shape=(5760, 1920))
+        detector = Detector(pixel1=0.255 / 5760, pixel2=0.255 / 5760, max_shape=(5760, 1920))
     else:
         detector = pyFAI.detector_factory(setting['detector'])
     detector.set_binning((setting['binning'], setting['binning']))
     poni1 = (setting['dim1'] - y_centre) * detector.pixel1
     poni2 = x_centre * detector.pixel2
-    ai = pyFAI.azimuthalIntegrator.AzimuthalIntegrator(dist=setting['distance'],
-                                                       poni1=poni1, poni2=poni2,
-                                                       rot1=np.deg2rad(setting['rot1']),
-                                                       rot2=np.deg2rad(setting['rot2']),
-                                                       rot3=np.deg2rad(setting['rot3']),
-                                                       detector=detector)
+    ai = AzimuthalIntegrator(dist=setting['distance'],
+                             poni1=poni1, poni2=poni2,
+                             rot1=np.deg2rad(setting['rot1']),
+                             rot2=np.deg2rad(setting['rot2']),
+                             rot3=np.deg2rad(setting['rot3']),
+                             detector=detector)
 
     if 'rayonix' == setting['detector'][:7]:
         mu_times_l = 1 / 9.72584 * 40  # from cxro site about Gd2O2S at 12.7 keV
-        pyFAI_geom = pyFAI.geometry.Geometry(dist=setting['distance'],
-                                             poni1=poni1, poni2=poni2,
-                                             rot1=np.deg2rad(setting['rot1']),
-                                             rot2=np.deg2rad(setting['rot2']),
-                                             rot3=np.deg2rad(setting['rot3']),
-                                             detector=detector)
+        pyFAI_geom = Geometry(dist=setting['distance'],
+                              poni1=poni1, poni2=poni2,
+                              rot1=np.deg2rad(setting['rot1']),
+                              rot2=np.deg2rad(setting['rot2']),
+                              rot3=np.deg2rad(setting['rot3']),
+                              detector=detector)
         phos_cor = pyFAI_geom.calc_transmission(np.exp(-mu_times_l))
         bkg = np.divide(bkg, phos_cor)
 
