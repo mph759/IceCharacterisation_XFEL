@@ -18,7 +18,7 @@ def normalise_peaks(peaks: list):
     :param peaks: Hexagonal ice diffraction peaks
     :return: List of normalised peaks
     """
-    normal_peak = np.max(peaks)
+    normal_peak = peaks[0]
     return [peak / normal_peak for peak in peaks]
 
 
@@ -32,7 +32,7 @@ def cubic_fraction(normalised_peak: float, peaks: list):
     return peaks[1] - normalised_peak * peaks[0]
 
 
-def cubicity(hex_peaks: list, peaks: list) -> float:
+def cubicity(peaks: list, hex_peaks: list = [17.491, 9.316, 10.188]) -> float:
     """
     Cubicity characterisation of ice crystal from X-ray diffraction peaks
     :param hex_peaks: Known hexagonal ice peak values
@@ -54,9 +54,9 @@ def cubicity_testing():
     ice_2um_peaks = [3.374151, 16.07073, 1.04]
     ice_10um_peaks = [67.89297, 30.95, 8.3]
     ice_50um_peaks = [172.57, 28.44, 20.47]
-    cubicity_2um = cubicity(hex_peaks, ice_2um_peaks)
-    cubicity_10um = cubicity(hex_peaks, ice_10um_peaks)
-    cubicity_50um = cubicity(hex_peaks, ice_50um_peaks)
+    cubicity_2um = cubicity(ice_2um_peaks)
+    cubicity_10um = cubicity(ice_10um_peaks)
+    cubicity_50um = cubicity(ice_50um_peaks)
     print(f'2 micron thick ice: {cubicity_2um}')
     print(f'10 micron thick ice: {cubicity_10um}')
     print(f'50 micron thick ice: {cubicity_50um}')
@@ -74,7 +74,6 @@ def cubicity_sim_data_test():
     hex_ice_model_peaks = [hex_ice_model.peak1.amplitude.value,
                            hex_ice_model.peak2.amplitude.value,
                            hex_ice_model.peak3.amplitude.value]
-    hex_ice_model_norm_peaks = normalise_peaks(hex_ice_model_peaks)
 
     mixed_ice_file = 'hc.h5'
     data_path = test_path / mixed_ice_file
@@ -86,7 +85,7 @@ def cubicity_sim_data_test():
     mixed_ice_model_peaks = [mixed_ice_model.peak1.amplitude.value,
                              mixed_ice_model.peak2.amplitude.value,
                              mixed_ice_model.peak3.amplitude.value]
-    mixed_ice_cubicity = cubicity(hex_ice_model_peaks, mixed_ice_model_peaks)
+    mixed_ice_cubicity = cubicity(mixed_ice_model_peaks, hex_ice_model_peaks)
     print(f'Cubicity: {mixed_ice_cubicity}')
     plt.show()
 

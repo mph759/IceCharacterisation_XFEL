@@ -11,7 +11,6 @@ from pyFAI.detectors import Detector
 from pyFAI.azimuthalIntegrator import AzimuthalIntegrator
 from pyFAI.geometry import Geometry
 import os
-os.environ['PYOPENCL_COMPILER_OUTPUT'] = '1'
 
 
 def radial_integration(frame: np.ndarray):
@@ -95,3 +94,7 @@ def load_onai_config(filename=None, det_type='rayonix_lx255-hs'):
     if filename is None:
         print('Load Default Configuration')
         return default_setting, default_mask, default_bkg
+
+
+if __name__ == '__main__':
+    os.environ['PYOPENCL_COMPILER_OUTPUT'] = '1'
