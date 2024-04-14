@@ -71,7 +71,10 @@ def process_new_file(self, file_path):
      #plt.savefig(plot_path + "_plot.png")
      #plt.close()
 
+def foo():
+    pass
+
 if __name__ == '__main__':
     path_to_watch = "C://Users//s3599678//OneDrive - RMIT University//PhD//misc//Seoul//scripts//IceCharacterisation_XFEL-master//test//powder//"
     out_path = path_to_watch+'//plots//'
-    watch_folder(path_to_watch, 1, 2)
+    watch_folder(path_to_watch, 1, 2, func=foo)

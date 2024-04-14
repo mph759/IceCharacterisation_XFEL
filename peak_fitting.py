@@ -10,7 +10,36 @@ import pandas as pd
 from pathlib import Path
 from astropy.modeling.fitting import LevMarLSQFitter
 from astropy.modeling.models import Gaussian1D
+from astropy import units as u
 from diffract_io import diffraction_h5
+from dataclasses import dataclass
+
+
+class GaussianPeaks(Gaussian1D):
+    def bind_mean(self, min_value=None, max_value=None):
+        if min_value and max_value is None:
+            self.bounds['mean'] = [self.mean - self.fwhm, self.mean + self.fwhm]
+        elif min_value is not None and max_value is None:
+            self.bounds['mean'] = [self.mean - min_value, self.mean + min_value]
+        else:
+            self.bounds['mean'] = [min_value, max_value]
+
+
+class NGaussian1DFitting:
+    def __init__(self, models: list[GaussianPeaks]):
+        self.num_gaussians = len(models)
+        self.fitter = LevMarLSQFitter()
+        self.__model__ = np.sum(models)
+
+    def fit(self, x_data: list, y_data: list, *args, **kwargs):
+        self.__model__ = self.fitter(self.model, x_data, y_data, *args, **kwargs)
+
+    @property
+    def model(self):
+        return self.__model__
+
+    def __getitem__(self, name):
+        return self.model[name]
 
 
 class CubicIceFitting:
@@ -25,7 +54,6 @@ class CubicIceFitting:
         else:
             self.__model__ = self.__init_model__(amplitude, mean, stddev, name=name)
         __peaks__ = {0: name}
-
 
     def __init_model__(self, amplitude: int, mean: int, stddev: float, name: str = 'cubic'):
         return Gaussian1D(amplitude=amplitude, mean=mean, stddev=stddev, name=name)
@@ -98,6 +126,7 @@ class HexIceFitting(CubicIceFitting):
         name = self.peak_names[index]
         return self.__parse_fit__(name)
 
+
 def gaussian_fitting_testing():
     # Generate simulated diffraction data (not realistic) from Gaussian curves,
     # adding random steps away to simulation diffusion
@@ -141,8 +170,10 @@ def sim_data_fitting_testing(data_path, data_name, amplitude, mean, stddev):
     fig, ax = diff_pattern.plot_rad_intensity()
 
     hex_ice = HexIceFitting(amplitude=amplitude, mean=mean, stddev=stddev)
-    hex_ice.fit(diff_pattern.q[(diff_pattern.q_selection[0] < diff_pattern.q) & (diff_pattern.q < diff_pattern.q_selection[1])],
-                diff_pattern.rad_intensity[(diff_pattern.q_selection[0] < diff_pattern.q) & (diff_pattern.q < diff_pattern.q_selection[1])])
+    hex_ice.fit(
+        diff_pattern.q[(diff_pattern.q_selection[0] < diff_pattern.q) & (diff_pattern.q < diff_pattern.q_selection[1])],
+        diff_pattern.rad_intensity[
+            (diff_pattern.q_selection[0] < diff_pattern.q) & (diff_pattern.q < diff_pattern.q_selection[1])])
 
     for i in range(0, 3):
         peak = hex_ice.model_data(i)
@@ -157,7 +188,34 @@ def sim_data_fitting_testing(data_path, data_name, amplitude, mean, stddev):
     return hex_ice
 
 
+def n_gaussian_test():
+    # Generate simulated diffraction data (not realistic) from Gaussian curves,
+    # adding random steps away to simulation diffusion
+    m = (Gaussian1D(amplitude=10, mean=20, stddev=5) +
+         Gaussian1D(amplitude=50, mean=50, stddev=5) +
+         Gaussian1D(amplitude=10, mean=80, stddev=5))
+    x = np.linspace(0, 100, 2000)
+    data = m(x)
+    data = data + np.sqrt(data) * (np.random.random(x.size) - 0.5)
+    # data -= data.min()
+    plt.plot(x, data, color='k', label='data')
+
+    peak1 = GaussianPeaks(name='hex_1', amplitude=10, mean=19, stddev=6)
+    peak2 = GaussianPeaks(name='hex_2', amplitude=10, mean=51, stddev=4)
+    peak3 = GaussianPeaks(name='hex_3', amplitude=10, mean=82, stddev=5)
+    model_params = [peak1, peak2, peak3]
+
+    gaussians = NGaussian1DFitting(model_params)
+    gaussians.fit(x, data, maxiter=1000, acc=0.001)
+    plt.plot(x, gaussians.model(x), label='full model', color='r', alpha=0.8, linestyle='dashed')
+    for gaussian in model_params:
+        plt.plot(x, gaussians.model[gaussian.name](x), label=gaussian.name, alpha=0.5, linestyle='dashed')
+        print(gaussian)
+    plt.legend()
+
+
 if __name__ == '__main__':
+    '''
     gaussian_fitting_testing()
 
     
@@ -167,4 +225,6 @@ if __name__ == '__main__':
                              amplitude=[6.5e-5, 1.3e-4, 2.9e-5],
                              mean=[1.6, 1.7, 1.8],
                              stddev=[0.01, 0.01, 0.01])
+    '''
+    n_gaussian_test()
     plt.show()

@@ -9,6 +9,7 @@ from pathlib import Path
 from matplotlib import pyplot as plt
 import glob
 from scipy import sparse
+from astropy import units as u
 
 
 class Experiment:
@@ -18,10 +19,10 @@ class Experiment:
                  pixel_size: float,
                  root_path: str):
         self.__id__ = experiment_id
-        self.__photon_energy__ = photon_energy
-        self.__wavelength__ = energy2wavelength(self.photon_energy)
-        self.__detector_distance__ = detector_distance
-        self.__pixel_size__ = pixel_size
+        self.__photon_energy__ = photon_energy * u.keV
+        self.__wavelength__ = self.photon_energy.to(u.m, equivalencies=u.spectral())
+        self.__detector_distance__ = detector_distance * u.m
+        self.__pixel_size__ = pixel_size * u.m
         if Path(root_path).exists():
             self.__root_path__ = Path(root_path)
         else:
@@ -44,7 +45,8 @@ class Experiment:
         return self.__detector_distance__
 
     @property
-    def pixel_size(self): return self.__pixel_size__
+    def pixel_size(self):
+        return self.__pixel_size__
 
     @property
     def path(self):
@@ -270,6 +272,7 @@ def partition_signal(y, noise_start, noise_end, signal_start, signal_end):
     signal = y[int(L * signal_start):int(L * signal_end)]
     return signal, noise
 
+
 def snr_3(y):
     snr_signal = np.var(y) / np.mean(y)
     return snr_signal
@@ -297,13 +300,16 @@ def loadmask(filename):
     return mask
 
 
+def energy2wavelength(photon_energy: u.Quantity | float):
+    """
+    Converts photon energy to wavelength
+    :param photon_energy: Photon energy in eV
+    :return: wavelength in metres
+    """
+    if isinstance(photon_energy, float):
+        photon_energy = photon_energy * u.eV
+    return c * h.to(u.eV * u.s) / photon_energy
 
 
-
-def energy2wavelength(photon_energy):
-    c = 299792458  # [m/s]
-    h = 6.582119569e-16  # [eV*s]
-    return c * h / photon_energy
-
-
-
+if __name__ == '__main__':
+    print((15*u.keV).to(u.angstrom, equivalencies=u.spectral()))

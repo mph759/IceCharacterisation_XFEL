@@ -21,8 +21,8 @@ if __name__ == '__main__':
     experiment_id = '2021-XSS'
     detector_dist = 0.321   # metres
     photon_energy = 15e3    # eV
-    pixel_size = None
-    test = False
+    pixel_size = 1
+    test = True
     if test:
         root_path = Path.cwd()
         tiff_path = root_path / Path('scratch-20240331T002819Z-001/scratch/day3_run2_Ice_50_00013_singles_1.tiff')
