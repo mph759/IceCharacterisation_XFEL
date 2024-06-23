@@ -91,5 +91,7 @@ def cubicity_sim_data_test():
 
 
 if __name__ == '__main__':
-    cubicity_testing()
-    cubicity_sim_data_test()
+    #cubicity_testing()
+    #cubicity_sim_data_test()
+
+    print(normalise_peaks([17.491, 9.316, 10.188])[1])

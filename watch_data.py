@@ -12,7 +12,7 @@ from watchdog.events import FileSystemEventHandler
 from PIL import Image
 import numpy as np
 import matplotlib.pyplot as plt
-from paltools import run, energy2wavelength, radial_average
+from paltools import Run, energy2wavelength, radial_average
 from ice_peak_predict import IcePeakPrediction
 from peak_fitting import HexIceFitting  
 
