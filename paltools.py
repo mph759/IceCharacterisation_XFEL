@@ -62,16 +62,17 @@ class Experiment:
         return 4 * np.arctan((radial_bins * self.pixel_size) / (2 * self.detector_distance))
 
 
-class run:
+class Run:
     def __init__(self, experiment: Experiment, runname: str):
         self.experiment = experiment
-        self.runname = self.experiment.path / f'{runname}/'
-        self.pulseinfo_filename = self.runname / "pulseInfo/"
-        self.twotheta_filename = self.runname / "eh1rayMXAI_tth/"
-        self.intensity_filename = self.runname / "eh1rayMXAI_int/"
-        self.total_sum_filename = self.runname / "ohqbpm2_totalsum/"
-        self.image_filename = self.runname / "eh1rayMX_img/"
-        self.numscans = len((self.pulseinfo_filename.glob("*.h5")))
+        self.name = runname
+        self.path = self.experiment.path / f'{runname}/'
+        self.pulseinfo_filename = self.path / "pulseInfo/"
+        self.twotheta_filename = self.path / "eh1rayMXAI_tth/"
+        self.intensity_filename = self.path / "eh1rayMXAI_int/"
+        self.total_sum_filename = self.path / "ohqbpm2_totalsum/"
+        self.image_filename = self.path / "eh1rayMX_img/"
+        self.numscans = len(list(self.pulseinfo_filename.glob("*.h5")))
         message = f"Found {self.numscans} scan files in run {runname}"
         print(message, end="\r")
 
@@ -110,7 +111,7 @@ class run:
             return np.squeeze(yvar)
 
         filename = self.getFileName(self.intensity_filename, scanId)
-        yvar = run.__getRadial(filename, pulseId)
+        yvar = Run.__getRadial(filename, pulseId)
         return yvar
 
     def getRadialIntensityNorm(self, scanId, pulseId):
@@ -124,7 +125,7 @@ class run:
             return np.squeeze(yvar)
 
         filename = self.getFileName(self.twotheta_filename, scanId)
-        xvar = run.__getRadial(filename, pulseId)
+        xvar = Run.__getRadial(filename, pulseId)
         return xvar
 
     def getImage(self, scanId, pulseId):
@@ -140,6 +141,21 @@ class run:
         with h5py.File(filename) as f:
             radial = f[pulseId][()]
         return radial
+
+    @property
+    def shape(self):
+        q_size = 0
+        total_numscans = 0
+        for scanId in range(1, self.numscans+1):
+            for i, pulseId in enumerate(self.getPulseIds(scanId)):
+                xvar, yvar = self.getRadialAverage(scanId, pulseId)
+                if q_size < len(xvar):
+                    q_size = len(xvar)
+                total_numscans += 1
+        return (q_size, total_numscans)
+
+
+
 
 
 def remove_baseline(y, ratio=1e-6, lam=2000, niter=10, full_output=False):
@@ -308,7 +324,7 @@ def energy2wavelength(photon_energy: u.Quantity | float):
     """
     if isinstance(photon_energy, float):
         photon_energy = photon_energy * u.eV
-    return c * h.to(u.eV * u.s) / photon_energy
+    return photon_energy.to(u.angstrom, equivalencies=u.spectral())
 
 
 if __name__ == '__main__':
