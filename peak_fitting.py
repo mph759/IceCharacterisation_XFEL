@@ -9,12 +9,34 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 from astropy.modeling.fitting import LevMarLSQFitter
-from astropy.modeling.models import Gaussian1D
+from astropy.modeling.models import Gaussian1D, Voigt1D
 from astropy import units as u
 from typing_extensions import deprecated
 
 from diffract_io import diffraction_h5
 from dataclasses import dataclass
+
+
+class VoigtPeak(Voigt1D):
+    def bind_mean(self, min_value=None, max_value=None):
+        if min_value and max_value is None:
+            self.bounds['x_0'] = [self.x_0 - self.fwhm_L, self.x_0 + self.fwhm_L]
+        elif min_value is not None and max_value is None:
+            self.bounds['x_0'] = [self.x_0 - min_value, self.x_0 + min_value]
+        else:
+            self.bounds['x_0'] = [min_value, max_value]
+
+    @property
+    def mean(self):
+        return self.x_0
+
+    @property
+    def amplitude(self):
+        return self.amplitude_L
+
+    @property
+    def fwhm(self):
+        return self.fwhm_G / np.sqrt(1 + np.pi ** 2 * np.log(2) * (self.fwhm_L / self.fwhm_G)**2)
 
 
 class GaussianPeak(Gaussian1D):
@@ -27,9 +49,9 @@ class GaussianPeak(Gaussian1D):
             self.bounds['mean'] = [min_value, max_value]
 
 
-class NGaussianPeaks:
-    def __init__(self, models: list[GaussianPeak]):
-        self.num_gaussians = len(models)
+class NPeaks:
+    def __init__(self, models: list[GaussianPeak] | list[VoigtPeak]):
+        self.num_models = len(models)
         self.fitter = LevMarLSQFitter()
         self.__model__ = np.sum(models)
 
@@ -211,7 +233,7 @@ def n_gaussian_test():
     peak3 = GaussianPeak(name='hex_3', amplitude=10, mean=82, stddev=5)
     model_params = [peak1, peak2, peak3]
 
-    guassians = NGaussianPeaks(model_params)
+    guassians = NPeaks(model_params)
     guassians.fit(x, data, maxiter=1000, acc=0.001)
     plt.plot(x, guassians.model(x), label='full model', color='r', alpha=0.8, linestyle='dashed')
     for gaussian in model_params:

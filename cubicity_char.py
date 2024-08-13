@@ -8,6 +8,8 @@ from typing import List, Any
 import numpy as np
 from pathlib import Path
 import matplotlib.pyplot as plt
+
+from ice_reflections import read_reflections
 # testing
 from peak_fitting import sim_data_fitting_testing
 

@@ -31,7 +31,6 @@ if __name__ == '__main__':
     output_root = Path(f'output/{run_root}')
     runs = sorted(list(root_path.glob(f'{run_root}_*_DIR')))
 
-
     data_array = np.empty((len(runs)*300, 512))
     data_array[:] = np.nan
     print(data_array.shape)
@@ -39,7 +38,7 @@ if __name__ == '__main__':
     for i, run in enumerate(runs):
         current_run = Run(current_exp, run.name)
         scan_id = 1
-        #for scan_id in range(1, current_run.numscans+1):
+        # for scan_id in current_run.getScanIds:
         for pulse_num, pulse_id in enumerate(current_run.getPulseIds(scan_id)):
             try:
                 xvar, yvar = current_run.getRadialAverage(scan_id, pulse_id)
@@ -48,4 +47,9 @@ if __name__ == '__main__':
                 print(f'No data found for {pulse_id}, Scan {scan_id} in {current_run.name}')
                 raise e
 
-    np.save(output_root/f'{run_root}.npy', data_array)
+    fig, ax = plt.subplots()
+    ax.imshow(data_array)
+    plt.tight_layout()
+    plt.show()
+
+    # np.save(output_root/f'{run_root}.npy', data_array)

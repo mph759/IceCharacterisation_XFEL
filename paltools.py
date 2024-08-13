@@ -10,6 +10,7 @@ from matplotlib import pyplot as plt
 import glob
 from scipy import sparse
 from astropy import units as u
+from functools import cached_property
 
 
 class Experiment:
@@ -17,7 +18,10 @@ class Experiment:
                  photon_energy: float,
                  detector_distance: float,
                  pixel_size: float,
-                 root_path: str):
+                 root_path: str,
+                 poni_file: Path | None = None,
+                 dark_file: Path | None = None,
+                 mask_file: Path | None = None):
         self.__id__ = experiment_id
         self.__photon_energy__ = photon_energy * u.keV
         self.__wavelength__ = self.photon_energy.to(u.m, equivalencies=u.spectral())
@@ -27,6 +31,9 @@ class Experiment:
             self.__root_path__ = Path(root_path)
         else:
             raise FileNotFoundError(f'Root path {root_path} does not exist')
+        self.__poni_file__ = Path(poni_file)
+        self.__dark_file__ = Path(dark_file)
+        self.__mask_file__ = Path(mask_file)
 
     @property
     def id(self):
@@ -61,6 +68,18 @@ class Experiment:
     def bins2twotheta(self, radial_bins):
         return 4 * np.arctan((radial_bins * self.pixel_size) / (2 * self.detector_distance))
 
+    @cached_property
+    def dark(self):
+        with h5py.File(self.__dark_file__, 'r') as f:
+            dark = f["dark"][()]
+        return dark
+
+    @cached_property
+    def mask(self):
+        with h5py.File(self.__mask_file__) as f:
+            mask = f["mask"][()]
+        return mask
+
 
 class Run:
     def __init__(self, experiment: Experiment, runname: str):
@@ -79,6 +98,10 @@ class Run:
     @staticmethod
     def getFileName(filepath, scanId):
         return sorted(Path(filepath).glob("*.h5"))[scanId - 1]
+
+    def getScanIds(self):
+        for scanId in range(1, self.numscans):
+            yield scanId
 
     def getPulseIds(self, scanId):
         filename = self.getFileName(self.pulseinfo_filename, scanId)
@@ -146,16 +169,13 @@ class Run:
     def shape(self):
         q_size = 0
         total_numscans = 0
-        for scanId in range(1, self.numscans+1):
+        for scanId in range(1, self.numscans + 1):
             for i, pulseId in enumerate(self.getPulseIds(scanId)):
                 xvar, yvar = self.getRadialAverage(scanId, pulseId)
                 if q_size < len(xvar):
                     q_size = len(xvar)
                 total_numscans += 1
         return (q_size, total_numscans)
-
-
-
 
 
 def remove_baseline(y, ratio=1e-6, lam=2000, niter=10, full_output=False):
@@ -316,6 +336,11 @@ def loadmask(filename):
     return mask
 
 
+def loadDark():
+    with h5py.File("240331_alignment_00002_DIR_dark.h5", "r") as f:
+        return f
+
+
 def energy2wavelength(photon_energy: u.Quantity | float):
     """
     Converts photon energy to wavelength
@@ -328,4 +353,4 @@ def energy2wavelength(photon_energy: u.Quantity | float):
 
 
 if __name__ == '__main__':
-    print((15*u.keV).to(u.angstrom, equivalencies=u.spectral()))
+    print((15 * u.keV).to(u.angstrom, equivalencies=u.spectral()))

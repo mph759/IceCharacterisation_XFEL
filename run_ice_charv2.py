@@ -9,19 +9,21 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import colors
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+import seaborn as sns
 from scipy.signal import find_peaks
+import itertools
 from copy import deepcopy
 
 from diffraction1d import radial_integration
 from cubicity_char import cubicity, normalise_peaks
 from domain_size_char import domain_size_from_gaussian
-from peak_fitting import NGaussianPeaks, GaussianPeak
+from peak_fitting import NPeaks, GaussianPeak, VoigtPeak
 from paltools import Experiment, Run
 from watch_data import watch_folder
 
 plt.rcParams['figure.figsize'] = [8, 8]
 plt.rcParams['savefig.dpi'] = 300
-
+palette = itertools.cycle(sns.color_palette('tab10'))
 
 def plot_2D_average(run: Run, title: str):
     avgimg = np.zeros((2880, 2880))
@@ -74,13 +76,9 @@ def plot_1D_average(run: Run, title: str | None = None, *, show_all: bool = Fals
     return fig_all, ax_all
 
 
-def model_shot(run: Run, title=None, *, show_all: bool = False):
-    peak1 = GaussianPeak(name='hex_1', amplitude=16, mean=12.55, stddev=0.04)
-    peak2 = GaussianPeak(name='hex_2', amplitude=2.3, mean=13.3, stddev=0.05)
-    peak3 = GaussianPeak(name='bkg', amplitude=0.5, mean=13, stddev=0.06)
-    model_params = [peak1, peak2, peak3]
-
-    x_min, x_max = (12.25, 13.5)
+def model_shot(run: Run, model_params: list[GaussianPeak] | list[VoigtPeak], x_range: tuple[float]= (12.25, 13.5),
+               title=None, *, show_all: bool = False):
+    x_min, x_max = x_range
 
     scan_id = 1
     z_dum = run.getPulseIds(scan_id)
@@ -99,8 +97,11 @@ def model_shot(run: Run, title=None, *, show_all: bool = False):
         xvarsel = (x_min < xvar) & (xvar < x_max)
 
         if i == 0:
-            gaussians = NGaussianPeaks(model_params)
-
+            gaussians = NPeaks(model_params)
+        if show_all:
+            plt.figure()
+            plt.plot(xvar[xvarsel], yvar[xvarsel], color='blue')
+            plt.show()
         gaussians.fit(xvar[xvarsel], yvar[xvarsel], maxiter=10000, acc=0.0001)
         if show_all:
             plt.figure()
@@ -152,15 +153,27 @@ def model_shot(run: Run, title=None, *, show_all: bool = False):
     return fig, (ax1, ax2, ax3), peaks
 
 
-def plot_raw_gaussian_info(gaussians: list[NGaussianPeaks], title=None):
-    fig, (ax_amps, ax_means) = plt.subplots(2, 1, sharex=True)
+def plot_raw_profile_info(profiles: list[NPeaks], show_components: bool = False, title=None):
+    fig, (ax_amps, ax_means, ax_fwhm) = plt.subplots(3, 1, sharex=True)
     y_max_amps = 0
-    names = gaussians[0].names
-    for name in names:
-        peak_amps = [peak[name].amplitude.value for peak in gaussians]
-        peak_means = [peak[name].mean.value for peak in gaussians]
-        ax_amps.plot(peak_amps, label=name)
-        ax_means.plot(peak_means)
+    names = profiles[0].names
+    for name, peak_col in zip(names, palette):
+        peak_amps = [peak[name].amplitude.value for peak in profiles]
+        peak_means = [peak[name].mean.value for peak in profiles]
+        ax_amps.plot(peak_amps, label=name, color=peak_col)
+        ax_means.plot(peak_means, color=peak_col)
+        peak_fwhm = [peak[name].fwhm for peak in profiles]
+        if isinstance(profiles[0][name], VoigtPeak) and show_components:
+            peak_fwhm_G = [peak[name].fwhm_G.value for peak in profiles]
+            peak_fwhm_L = [peak[name].fwhm_L.value for peak in profiles]
+            ax_fwhm.plot(peak_fwhm_G, linestyle='dashed', color=peak_col, label='Gaussian comp.')
+            ax_fwhm.plot(peak_fwhm_L, linestyle='dotted', color=peak_col, label='Lorentzian comp.')
+            ax_fwhm.plot(peak_fwhm, color=peak_col, label='Voigt')
+            if name == names[0]:
+                ax_fwhm.legend()
+        else:
+            ax_fwhm.plot(peak_fwhm, color=peak_col)
+
         y_max_amps_new = np.max(peak_amps) * 1.1
         if y_max_amps_new > y_max_amps:
             y_max_amps = y_max_amps_new
@@ -168,29 +181,30 @@ def plot_raw_gaussian_info(gaussians: list[NGaussianPeaks], title=None):
     ax_amps.set_ylim(0, y_max_amps)
     ax_amps.set_ylabel("Intensity")
 
-    ax_means.set_ylabel("Mean of peak")
-    ax_means.set_xlabel("Pulse")
-    fig.legend()
+    ax_means.set_ylabel("X value")
+    ax_fwhm.set_ylabel("FWHM")
+    ax_fwhm.set_xlabel("Pulse")
+    fig.legend(names)
     if title is not None:
         fig.suptitle(title)
     fig.tight_layout()
-    return fig, (ax_amps, ax_means)
+    return fig, (ax_amps, ax_means, ax_fwhm)
 
 
-def plot_cubicity(ax, gaussians: list[NGaussianPeaks]):
+def plot_cubicity(ax, profiles: list[NPeaks]):
     cubicity_vals = [cubicity(peaks) for peaks in
-                     [(gaussian['hex_1'].amplitude.value, gaussian['hex_2'].amplitude.value) for gaussian in gaussians]]
+                     [(peaks['hex_1'].amplitude.value, peaks['hex_2'].amplitude.value) for peaks in profiles]]
     ax.plot(cubicity_vals)
     ax.set_ylabel("Cubicity")
 
 
-def plot_domain_size(ax, gaussians: list[NGaussianPeaks]):
-    domain_size_vals = [domain_size_from_gaussian(gaussian['hex_1'], current_run) for gaussian in gaussians]
+def plot_domain_size(ax, profiles: list[NPeaks]):
+    domain_size_vals = [domain_size_from_gaussian(peaks['hex_1'], current_run) for peaks in profiles]
     ax.plot(domain_size_vals)
     ax.set_ylabel("Domain size")
 
 
-def plot_cubicity_domain_size(gaussians: list[NGaussianPeaks], title=None):
+def plot_cubicity_domain_size(gaussians: list[NPeaks], title=None):
     fig, (ax_cub, ax_domain) = plt.subplots(2, 1, sharex=True)
     if title is not None:
         fig.suptitle(title)
@@ -199,6 +213,20 @@ def plot_cubicity_domain_size(gaussians: list[NGaussianPeaks], title=None):
     ax_domain.set_xlabel("Pulse")
     fig.tight_layout()
     return fig, (ax_cub, ax_domain)
+
+
+def define_gaussians():
+    peak1 = GaussianPeak(name='hex_1', amplitude=16, mean=12.55, stddev=0.04)
+    peak2 = GaussianPeak(name='hex_2', amplitude=2.3, mean=13.3, stddev=0.05)
+    peak3 = GaussianPeak(name='bkg', amplitude=0.5, mean=13, stddev=0.06)
+    return [peak1, peak2, peak3]
+
+
+def define_voigts(method: str = 'Humlicek2'):
+    peak1 = VoigtPeak(name='hex_1', amplitude_L=16, x_0=12.55, fwhm_G=0.45, fwhm_L=0.45, method=method)
+    peak2 = VoigtPeak(name='hex_2', amplitude_L=2.3, x_0=13.3, fwhm_G=0.06, fwhm_L=0.06, method=method)
+    peak3 = VoigtPeak(name='hex_3', amplitude_L=1.8, x_0=14.15, fwhm_G=0.06, fwhm_L=0.06, method=method)
+    return [peak1, peak2, peak3]
 
 
 if __name__ == '__main__':
@@ -219,12 +247,14 @@ if __name__ == '__main__':
         # Plot 2D average for run
         #fig_2d, ax_2d = plot_2D_average(current_run, f"shot average {current_run.name}")
 
-        plot_1D_average(current_run, title=run.name, show_first=True)
-        plt.show()
+        # plot_1D_average(current_run, title=run.name, show_first=True)
+        # plt.show()
 
         # Model Gaussian peaks to data
-        fig_model_compare, _, gaussians = model_shot(current_run, title=run.name)  #, show_all=True)
-        plt.close(fig_model_compare)
+        model_params = define_voigts()
+
+        fig_model_compare, _, gaussians = model_shot(current_run, model_params, x_range=(12.25, 14.6), title=run.name)# , show_all=True)
+        plt.show()
         normal_amps = np.zeros([len(gaussians), 3])
         theor_normal_amp = normalise_peaks([17.491, 9.316, 10.188])[1]
         for i, gaussian in enumerate(gaussians):
@@ -243,14 +273,14 @@ if __name__ == '__main__':
         plt.legend()
         plt.tight_layout()
         plt.show()
-        '''
-        fig_model_params, _ = plot_raw_gaussian_info(gaussians, title=run.name)
+
+        fig_model_params, _ = plot_raw_profile_info(gaussians, title=run.name)
         fig_cubicity_domain, _ = plot_cubicity_domain_size(gaussians, title=run.name)
         
 
-        fig_model_compare.savefig(output_path / 'gaussian_model.png')
-        fig_model_params.savefig(output_path / 'gaussian_params.png')
-        fig_cubicity_domain.savefig(output_path / 'cubicity+domain.png')
-        # plt.show()
+        # fig_model_compare.savefig(output_path / 'gaussian_model.png')
+        # fig_model_params.savefig(output_path / 'gaussian_params.png')
+        # fig_cubicity_domain.savefig(output_path / 'cubicity+domain.png')
+        plt.show()
         plt.close('all')
-        '''
+
