@@ -1,4 +1,5 @@
 import os
+#pasgn="Week8 Physics (Module 2)"
 import sys
 sys.path.append("../../../Downloads")
 
@@ -10,11 +11,15 @@ import h5py
 import glob
 from pathlib import Path
 
-ROOT = "/home/PAL/ue_240330_FXL/"
+BASE = "/Volumes/jack_drive/gspark_snu PAL-XFEL data/"
+#ROOT = "/home/PAL/ue_240330_FXL/"
+ROOT = BASE+"ctbas/ue_240330_FXL/"
 POLARIZATION_FACTOR = 0.996
 UNIT = "q_A^-1"
-PONIFILE = "/home/sebastian/projects/pal-xss-r004/data/detector-calibration/Aghb_2024_06_11.poni"
-
+PONIFILE = BASE+"analysis/input_files/Aghb_2024_06_11.poni"
+DARKFILE = BASE+"analysis/input_files/240331_alignment_00002_DIR_dark.h5"
+MASKFILE = ROOT+"scratch/240330_mask_2_10Hz.h5"
+OUTDIR = BASE+"radial_averages/"
 
 def run(ray_data, dark, mask, npt=5760 // 2, radial_range=None):
     ai = pyFAI.load(PONIFILE)
@@ -33,15 +38,23 @@ def radialavg(ai, ray_data, phos_cor, dark, mask, npt=5760 // 2, radial_range=No
 
 
 def main(runname):
-    root_path = Path('F:\gspark_snu PAL-XFEL data/ctbas/ue_240330_FXL/scan/')
+    #root_path = Path('F:\gspark_snu PAL-XFEL data/ctbas/ue_240330_FXL/scan/')
     current_exp = Experiment(experiment_id="2023-2nd-XSS-040",
                              photon_energy=15e3,
                              detector_distance=0.321,
                              pixel_size=0.255 / 5760,
-                             root_path=root_path)
+                             root_path=ROOT+"scan/",
+                             poni_file=PONIFILE, 
+                             dark_file=DARKFILE,
+                             mask_file=MASKFILE)
     current_run = Run(current_exp, runname)
-    mra_r_exists = Path(current_run.name + "/mra_r.h5").is_file()
-    mra_int_exists = Path(current_run.name + "/mra_int.h5").is_file()
+    dark = current_exp.loadDark()   #CHANGE THESE TO READ FROM EXP CLASS
+    mask = current_exp.loadMask()
+    #print( "debug dark :", current_exp.dark.shape)
+
+
+    #mra_r_exists = Path(current_run.name + "/mra_r.h5").is_file()
+    #mra_int_exists = Path(current_run.name + "/mra_int.h5").is_file()
     # if mra_r_exists and mra_int_exists:
     # return None  # runs already processed
 
@@ -50,65 +63,67 @@ def main(runname):
 
     print("processing %s" % current_run.name)
 
-    pulseids = current_run.getPulseIds()
-    # print(pulseids.shape)
-    # print(run.getImagePulseIds().shape)
-    try:
-        pulseids = check_pulseids(pulseids, current_run.getImagePulseIds())
-    except RuntimeError:
-        pulseids = numpy.array(
-            [
-                "1712044015.0504627_50400",
-                "1712044015.1504707_50436",
-                "1712044015.2504785_50472",
-                "1712044015.3504865_50508",
-                "1712044015.4504945_50544",
-                "1712044015.5505023_50580",
-                "1712044015.6505103_50616",
-                "1712044015.7506495_50652",
-                "1712044015.8506572_50688",
-                "1712044015.9506652_50724",
-                "1712044016.0505939_50760",
-                "1712044016.1506016_50796",
-                "1712044016.2506096_50832",
-                "1712044016.3507488_50868",
-                "1712044016.4507565_50904",
-                "1712044016.5507646_50940",
-                "1712044016.6507726_50976",
-                "1712044016.7507803_51012",
-                "1712044016.8507884_51048",
-                "1712044016.9507964_51084",
-                "1712044017.0508559_51120",
-                "1712044017.150864_51156",
-                "1712044017.250872_51192",
-                "1712044017.3508797_51228",
-            ]
-        )
-        print("error getting image pulse ids")
+    scanids = current_run.getScanIds()
+    print("scanids", scanids[:], current_run.numscans, current_run.pulseinfo_filename)
+    for scanid in scanids:
+        pulseids = current_run.getPulseIds(scanid)
+        print(scanid, pulseids.shape)
+        # print(run.getImagePulseIds().shape)
+        """
+        try:
+            pulseids = check_pulseids(pulseids, current_run.getImagePulseIds())
+        except RuntimeError:
+            pulseids = numpy.array(
+                [
+                    "1712044015.0504627_50400",
+                    "1712044015.1504707_50436",
+                    "1712044015.2504785_50472",
+                    "1712044015.3504865_50508",
+                    "1712044015.4504945_50544",
+                    "1712044015.5505023_50580",
+                    "1712044015.6505103_50616",
+                    "1712044015.7506495_50652",
+                    "1712044015.8506572_50688",
+                    "1712044015.9506652_50724",
+                    "1712044016.0505939_50760",
+                    "1712044016.1506016_50796",
+                    "1712044016.2506096_50832",
+                    "1712044016.3507488_50868",
+                    "1712044016.4507565_50904",
+                    "1712044016.5507646_50940",
+                    "1712044016.6507726_50976",
+                    "1712044016.7507803_51012",
+                    "1712044016.8507884_51048",
+                    "1712044016.9507964_51084",
+                    "1712044017.0508559_51120",
+                    "1712044017.150864_51156",
+                    "1712044017.250872_51192",
+                    "1712044017.3508797_51228",
+                ]
+            )
+            print("error getting image pulse ids")
+        """
 
-    dark = paltools.loadDark()
-    mask = paltools.loadMask()
+        ai = pyFAI.load(PONIFILE)
+        mu_times_l = 1 / 9.72584 * 40  # from cxro site about Gd2O2S at 12.7 keV
+        phos_cor = ai.calc_transmission(numpy.exp(-mu_times_l))
+        dark = numpy.divide(dark, phos_cor)
 
-    ai = pyFAI.load(PONIFILE)
-    mu_times_l = 1 / 9.72584 * 40  # from cxro site about Gd2O2S at 12.7 keV
-    phos_cor = ai.calc_transmission(numpy.exp(-mu_times_l))
-    dark = numpy.divide(dark, phos_cor)
+        q_array = []
+        intensity_array = []
+        for pulseids_chunk in chunker(pulseids, 1000):
+            q_chunk, intensity_chunk = __process(current_run, scanid, pulseids_chunk, ai, phos_cor, dark, mask)
+            q_array.append(q_chunk)
+            intensity_array.append(intensity_chunk)
 
-    q_array = []
-    intensity_array = []
-    for pulseids_chunk in chunker(pulseids, 1000):
-        q_chunk, intensity_chunk = __process(current_run, pulseids_chunk, ai, phos_cor, dark, mask)
-        q_array.append(q_chunk)
-        intensity_array.append(intensity_chunk)
-
-    q_array = numpy.vstack(q_array)
-    intensity_array = numpy.vstack(intensity_array)
-    __save(current_run, pulseids, q_array, intensity_array)
+        q_array = numpy.vstack(q_array)
+        intensity_array = numpy.vstack(intensity_array)
+        __save(current_run, scanid, pulseids, q_array, intensity_array)
     return None
 
 
-class PulseIdsMatchingError:
-    pass
+    #class PulseIdsMatchingError:
+    #    pass
 
 
 def check_pulseids(pd1, pd2):
@@ -125,9 +140,9 @@ def chunker(seq, size):
     return (seq[pos : pos + size] for pos in range(0, len(seq), size))
 
 
-def __process(run, pulseids, ai, phos_cor, dark, mask):
+def __process(run, scanid, pulseids, ai, phos_cor, dark, mask):
     print("loading images...")
-    images = run.getImage(pulseids)
+    images = run.getImage(scanid, pulseids)
     intensity_array = []
     q_array = []
     print("computing radial average...")
@@ -139,14 +154,19 @@ def __process(run, pulseids, ai, phos_cor, dark, mask):
     return q_array, intensity_array
 
 
-def __save(run, pulseids, q_array, intensity_array):
+def __save(run, scanid, pulseids, q_array, intensity_array):
     print("saving radial averages...")
-    with h5py.File(run.runname + "/mra_int.h5", "w") as f:
+    scan = run.getFileName(run.intensity_filename,scanid)
+    with h5py.File(OUTDIR+run.name+"_mra.h5", "w") as f:
         for index in range(pulseids.size):
-            f.create_dataset(pulseids[index], data=intensity_array[index])
-    with h5py.File(run.runname + "/mra_r.h5", "w") as f:
-        for index in range(pulseids.size):
-            f.create_dataset(pulseids[index], data=q_array[index])
+            f.create_dataset(scan.stem+"/"+pulseids[index]+"/intensity", data=intensity_array[index])
+            f.create_dataset(scan.stem+"/"+pulseids[index]+"/q", data=q_array[index])
+    #with h5py.File(OUTDIR+run.runname + "/mra_int.h5", "w") as f:
+    #    for index in range(pulseids.size):
+    #        f.create_dataset(pulseids[index], data=intensity_array[index])
+    #with h5py.File(OUTDIR+run.runname + "/mra_r.h5", "w") as f:
+    #    for index in range(pulseids.size):
+    #        f.create_dataset(pulseids[index], data=q_array[index])
     return None
 
 
@@ -155,3 +175,4 @@ if __name__ == "__main__":
     runnames = [runname.split("/")[-1] for runname in runnames]
     for runname in runnames:
         main(runname)
+        exit() # hack to just do the first run

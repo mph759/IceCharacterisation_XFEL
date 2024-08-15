@@ -68,14 +68,14 @@ class Experiment:
     def bins2twotheta(self, radial_bins):
         return 4 * np.arctan((radial_bins * self.pixel_size) / (2 * self.detector_distance))
 
-    @cached_property
-    def dark(self):
+    #@cached_property
+    def loadDark(self):
         with h5py.File(self.__dark_file__, 'r') as f:
             dark = f["dark"][()]
         return dark
 
-    @cached_property
-    def mask(self):
+    #@cached_property
+    def loadMask(self):
         with h5py.File(self.__mask_file__) as f:
             mask = f["mask"][()]
         return mask
@@ -97,11 +97,14 @@ class Run:
 
     @staticmethod
     def getFileName(filepath, scanId):
+        print( "DEBUG getFILEname", scanId) 
         return sorted(Path(filepath).glob("*.h5"))[scanId - 1]
 
     def getScanIds(self):
-        for scanId in range(1, self.numscans):
-            yield scanId
+        #for scanId in range(1, self.numscans):
+        #    yield scanId
+        return list(range(self.numscans))
+
 
     def getPulseIds(self, scanId):
         filename = self.getFileName(self.pulseinfo_filename, scanId)
@@ -155,6 +158,8 @@ class Run:
         if np.ndim(pulseId) != 0:
             yvar = np.array([self.getImage(scanId, id) for id in pulseId])
             return np.squeeze(yvar)
+        print("debug getImage scanId", scanId)
+        print("debug getImage pulseId", pulseId)
         filename = self.getFileName(self.image_filename, scanId)
         with h5py.File(filename) as f:
             return f[pulseId][()]
