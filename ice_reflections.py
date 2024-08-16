@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from pathlib import Path
-
+import pathlib
 
 def read_reflections(filename: str | Path):
     df = pd.read_csv(filename, sep='\s+')
@@ -12,9 +12,10 @@ def read_reflections(filename: str | Path):
 
 
 if __name__ == '__main__':
-    path_root = Path(r'C:\Users\Michael_X13\OneDrive - RMIT University\Research\PAL-XFEL 2024\Pure ice phases')
-    ice_ih = read_reflections(path_root / r'Ice Ih\Ice Ih (1538173).txt')
-    ice_ic = read_reflections(path_root / r'Ice Ic\Ice Ic (1541503).txt')
+    print(Path().absolute())
+    path_root = Path().absolute()/ r'Pure ice phases'
+    ice_ih = read_reflections(path_root / r'Ice Ih' / 'Ice Ih (1538173).txt')
+    ice_ic = read_reflections(path_root / r'Ice Ic' / 'Ice Ic (1541503).txt')
 
     print(f'Ice Ih')
     print(ice_ih.iloc[0:5])
