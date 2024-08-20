@@ -11,14 +11,14 @@ import h5py
 import glob
 from pathlib import Path
 
-BASE = "/Volumes/jack_drive/gspark_snu PAL-XFEL data/"
+BASE = "/Volumes/BackUp19/Data/gspark_snu PAL-XFEL data/"
 #ROOT = "/home/PAL/ue_240330_FXL/"
 ROOT = BASE+"ctbas/ue_240330_FXL/"
 POLARIZATION_FACTOR = 0.996
 UNIT = "q_A^-1"
 PONIFILE = BASE+"analysis/input_files/Aghb_2024_06_11.poni"
 DARKFILE = BASE+"analysis/input_files/240331_alignment_00002_DIR_dark.h5"
-MASKFILE = ROOT+"scratch/240330_mask_2_10Hz.h5"
+MASKFILE = BASE+"analysis/input_files/240331_mask_2.h5"
 OUTDIR = BASE+"radial_averages/"
 
 def run(ray_data, dark, mask, npt=5760 // 2, radial_range=None):
@@ -64,10 +64,10 @@ def main(runname):
     print("processing %s" % current_run.name)
 
     scanids = current_run.getScanIds()
-    print("scanids", scanids[:], current_run.numscans, current_run.pulseinfo_filename)
+    #print("scanids", scanids[:], current_run.numscans, current_run.pulseinfo_filename)
     for scanid in scanids:
         pulseids = current_run.getPulseIds(scanid)
-        print(scanid, pulseids.shape)
+        #print(scanid, pulseids.shape)
         # print(run.getImagePulseIds().shape)
         """
         try:
@@ -156,11 +156,14 @@ def __process(run, scanid, pulseids, ai, phos_cor, dark, mask):
 
 def __save(run, scanid, pulseids, q_array, intensity_array):
     print("saving radial averages...")
-    scan = run.getFileName(run.intensity_filename,scanid)
-    with h5py.File(OUTDIR+run.name+"_mra.h5", "w") as f:
+    print("debug <__save> scanid", scanid)
+    scan = run.getFileName(run.image_filename,scanid)
+    with h5py.File(OUTDIR+run.name+"_mra.h5", "a") as f:
+        scan = f.require_group(scan.stem)
         for index in range(pulseids.size):
-            f.create_dataset(scan.stem+"/"+pulseids[index]+"/intensity", data=intensity_array[index])
-            f.create_dataset(scan.stem+"/"+pulseids[index]+"/q", data=q_array[index])
+            pulse = scan.require_group(pulseids[index])
+            pulse.create_dataset("intensity", data=intensity_array[index])
+            pulse.create_dataset("q", data=q_array[index])
     #with h5py.File(OUTDIR+run.runname + "/mra_int.h5", "w") as f:
     #    for index in range(pulseids.size):
     #        f.create_dataset(pulseids[index], data=intensity_array[index])
@@ -171,7 +174,8 @@ def __save(run, scanid, pulseids, q_array, intensity_array):
 
 
 if __name__ == "__main__":
-    runnames = glob.glob(ROOT + "scan/day*")
+    runnames = glob.glob(ROOT + "scan/day3_rus3_shot1_00002*")
+    print("number of runs found to analyse:", len(runnames))
     runnames = [runname.split("/")[-1] for runname in runnames]
     for runname in runnames:
         main(runname)

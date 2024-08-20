@@ -97,8 +97,8 @@ class Run:
 
     @staticmethod
     def getFileName(filepath, scanId):
-        print( "DEBUG getFILEname", scanId) 
-        return sorted(Path(filepath).glob("*.h5"))[scanId - 1]
+        #print( "DEBUG getFILEname", scanId) 
+        return sorted(Path(filepath).glob("*.h5"))[scanId]
 
     def getScanIds(self):
         #for scanId in range(1, self.numscans):
@@ -158,8 +158,8 @@ class Run:
         if np.ndim(pulseId) != 0:
             yvar = np.array([self.getImage(scanId, id) for id in pulseId])
             return np.squeeze(yvar)
-        print("debug getImage scanId", scanId)
-        print("debug getImage pulseId", pulseId)
+        #print("debug getImage scanId", scanId)
+        #print("debug getImage pulseId", pulseId)
         filename = self.getFileName(self.image_filename, scanId)
         with h5py.File(filename) as f:
             return f[pulseId][()]
