@@ -179,4 +179,3 @@ if __name__ == "__main__":
     runnames = [runname.split("/")[-1] for runname in runnames]
     for runname in runnames:
         main(runname)
-        exit() # hack to just do the first run
